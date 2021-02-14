@@ -341,7 +341,5 @@ if __name__ == "__main__":
     canvasText4_highlight2 = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 2)
     canvasText4_highlight3 = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 4)
 
-
-
     Root.mainloop()
 
