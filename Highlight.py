@@ -336,12 +336,10 @@ if __name__ == "__main__":
     canvasText3 = canvas.create_text(10, 100, text = "Background Highlgiht", anchor = NW)
     canvasText3_highlight = MouseoverHighlight(canvasText3, Root, canvas, highlightOption = 0x04)
 
-    canvasText4 = canvas.create_text(10, 150, text = "Background Highlight", anchor = NW)
+    canvasText4 = canvas.create_text(10, 160, text = "Background Highlight", anchor = NW)
     canvasText4_highlight = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 1)
     canvasText4_highlight2 = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 2)
     canvasText4_highlight3 = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 4)
-
-
 
 
 
