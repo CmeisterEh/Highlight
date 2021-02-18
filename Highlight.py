@@ -280,6 +280,9 @@ class MouseoverHighlight:
         self.Canvas.tag_bind(self.Widget, '<Enter>', self.changeTextColour_enter, add = '+')
         self.Canvas.tag_bind(self.Widget, '<Leave>', self.changeTextColour_leave, add = '+')
 
+        self.track = 1
+
+
 
 
         if debugging == True: print("Change Colour Highlight Initialization Complete")
@@ -288,12 +291,16 @@ class MouseoverHighlight:
         ''' Entering the Text Widget Region causes the text to change colour
         and changing of the text colour indicates the text can be selected '''
         if debugging == True: print("Text Colour Change" )
-        self.countEnter = self.countEnter + 1
         if debugging == True: print("Enter count: ", self.countEnter)
-
         self.Canvas.itemconfig(self.Widget, fill = self.TextColour)
+
+        if self.countEnter <= 3:
+            self.countEnter += 1
+
+
         if self.countEnter == 1:
-            self.enter_callback = self.Canvas.after(2000, self.changeTextColour_check)
+            self.enter_callback = self.Root.after(2000, self.changeTextColour_check)
+            if debugging == True: print("Callback Created")
 
     def changeTextColour_leave(self, event = None):
         ''' Exiting the Text Widget Region should cause the text to change
@@ -304,19 +311,23 @@ class MouseoverHighlight:
         self.Canvas.itemconfig(self.Widget, fill = self.defaultTextColour)
         self.countEnter = 0
         if "enter_callback" in self.__dict__.keys():
-            self.Canvas.after_cancel(self.enter_callback)
-            del self.enter_callback
+            if self.enter_callback != None:
+                self.Root.after_cancel(self.enter_callback)
+                del self.enter_callback
         self.enter_callback = None
 
 
     def changeTextColour_check(self):
-        canvas_x = self.Root.winfo_rootx()
-        canvas_y = self.Root.winfo_rooty()
+
+        self.track = self.track + 1
+
+        canvas_x = self.Canvas.winfo_rootx()
+        canvas_y = self.Canvas.winfo_rooty()
 
         mouse_x = self.Canvas.winfo_pointerx()
         mouse_y = self.Canvas.winfo_pointery()
-        print("Canvas Position: ", canvas_x, canvas_y)
-        print(" Mouse Position: ", mouse_x, mouse_y)
+        if debugging == True: print("Canvas Position: ", canvas_x, canvas_y)
+        if debugging == True: print(" Mouse Position: ", mouse_x, mouse_y)
         position = self.Canvas.bbox(self.Widget)
 
         mouse_x = mouse_x - canvas_x
@@ -328,23 +339,17 @@ class MouseoverHighlight:
         minY = position[1]
         maxY = position[3]
 
-        if minX <= mouse_x <= maxX:
-            print("Inside X")
-            if self.enter_callback == None:
-                self.enter_callback = self.Canvas.after(2000, self.changeTextColour_check() )
+        if debugging == True: print("# of Callbacks Entered: ", self.track)
+
+        if (minX <= mouse_x <= maxX) & (minY <= mouse_y <= maxY) :
+            if debugging == True: print("Inside")
+            self.enter_callback = self.Root.after(2000, self.changeTextColour_check )
+            if debugging == True: print("Callback Created")
             pass
         else:
-            print("Outside X")
+            if debugging == True: print("Outside")
             self.changeTextColour_leave()
 
-        if minY <= mouse_y <= maxY:
-            print("Inside Y")
-            if self.enter_callback == None:
-                self.enter_callback = self.Canvas.after(2000, self.changeTextColour_check() )
-            pass
-        else:
-            print("Outside Y")
-            self.changeTextColour_leave()
 
 
 
@@ -358,20 +363,31 @@ class MouseoverHighlight:
         if debugging == True: print("Outline Box Initialized")
         self.Canvas.tag_bind(self.Widget, '<Enter>', self.changeOutline_enter, add = '+')
         self.Canvas.tag_bind(self.Widget, '<Leave>', self.changeOutline_leave, add = '+')
-        self.countEnter = 0
+        self.changeTextOutline_countEnter = 0
+        self.changeTextOutline_enterCallback = None
+
 
         if debugging == True: print("Outline Box Highlight Initialized")
 
     def changeOutline_enter(self, event = None) :
         ''' Entering the Text Widget Region Creates an Outline Box '''
         if debugging == True: print("Creating Highlight Box")
-        self.countEnter = self.countEnter + 1
-        if debugging == True: print("Enter count: ", self.countEnter)
+
+
 
         self.coordinates = self.Canvas.bbox(self.Widget)
         self.highlightBox = self.Canvas.create_rectangle(self.coordinates,
                                                          outline = self.defaultOutlineColour,
                                                          width = self.OutlineWidth)
+
+        if self.changeTextOutline_countEnter <= 3:
+            self.changeTextOutline_countEnter += 1
+        if debugging == True: print("Enter count: ", self.changeTextOutline_countEnter)
+
+        if self.changeTextOutline_countEnter == 1:
+            self.changeTextOutline_enterCallback = self.Root.after(2000, self.changeOutline_check)
+            pass
+
 
     def changeOutline_leave(self, event = None):
         ''' Leaving the Text Widget Region Eliminates the Outline Box '''
@@ -380,6 +396,43 @@ class MouseoverHighlight:
         if "highlightBox" in self.__dict__.keys():
             self.Canvas.delete(self.highlightBox)
             self.Canvas.update()
+            del self.highlightBox
+
+        if "changeTextOutline_enterCallback" in self.__dict__.keys():
+            if self.changeTextOutline_enterCallback != None:
+                self.Root.after_cancel(self.changeTextOutline_enterCallback)
+                del self.changeTextOutline_enterCallback
+        self.changeTextOutline_enterCallback = None
+
+    def changeOutline_check(self):
+        canvas_x = self.Canvas.winfo_rootx()  #Canvas Top Left Absolute Position
+        canvas_y = self.Canvas.winfo_rooty()
+
+        mouse_x = self.Canvas.winfo_pointerx()    #Mouse Pointer Absolute Position
+        mouse_y = self.Canvas.winfo_pointery()
+        if debugging == True: print("Canvas Position: ", canvas_x, canvas_y)
+        if debugging == True: print(" Mouse Position: ", mouse_x, mouse_y)
+        position = self.Canvas.bbox(self.Widget)
+
+        mouse_x = mouse_x - canvas_x
+        mouse_y = mouse_y - canvas_y
+
+        minX = position[0]
+        maxX = position[2]
+
+        minY = position[1]
+        maxY = position[3]
+
+        if (minX <= mouse_x <= maxX) | (minY <= mouse_y <= maxY):
+            if debugging == True: print("Inside X")
+            if self.changeTextOutline_enterCallback == None:
+                self.changeTextOutline_enterCallback = self.Root.after(2000, self.changeOutline_check )
+                if debugging == True: print("Here 1")
+            pass
+        else:
+            if debugging == True: print("Outside X")
+            self.changeOutline_leave()
+
 
 ##############################################################################
     def changeTextBackground(self):
@@ -388,8 +441,14 @@ class MouseoverHighlight:
 
         if debugging == True: print("background change initialized")
         self.coordinates = self.Canvas.bbox(self.Widget)
+
+        self.changeTextBackground_countEnter = 0
+        self.changeTextBackground_enterCallback = None
+
         self.Canvas.tag_bind(self.Widget, '<Enter>', self.changeBackground_enter, add = '+')
         self.Canvas.tag_bind(self.Widget, '<Leave>', self.changeBackground_leave, add = '+')
+
+
 
 
     def changeBackground_enter(self, event = None):
@@ -402,6 +461,11 @@ class MouseoverHighlight:
         self.Canvas.tag_lower(self.background)
         self.Canvas.tag_raise(self.Widget)
         self.Canvas.update()
+        if self.changeTextBackground_countEnter <= 3:
+            self.changeTextBackground_countEnter += 1
+
+        if self.changeTextBackground_countEnter == 1:
+            self.changeTextBackground_enterCallback = self.Root.after(2000, self.changeBackground_check)
 
     def changeBackground_leave(self, event = None):
         ''' Leaving the Text Widget Region Returns the background colour
@@ -409,6 +473,41 @@ class MouseoverHighlight:
         if "background" in self.__dict__.keys():
             self.Canvas.delete(self.background)
             self.Canvas.update()
+
+        if "changeTextBackground_enterCallback" in self.__dict__.keys():
+            if self.changeTextBackground_enterCallback != None:
+                self.Root.after_cancel(self.changeTextBackground_enterCallback)
+                del self.changeTextBackground_enterCallback
+        self.changeTextBackground_enterCallback = None
+
+
+    def changeBackground_check(self):
+        canvas_x = self.Canvas.winfo_rootx()
+        canvas_y = self.Canvas.winfo_rooty()
+
+        mouse_x = self.Canvas.winfo_pointerx()
+        mouse_y = self.Canvas.winfo_pointery()
+        if debugging == True: print("Canvas Position: ", canvas_x, canvas_y)
+        if debugging == True: print(" Mouse Position: ", mouse_x, mouse_y)
+        position = self.Canvas.bbox(self.Widget)
+
+        mouse_x = mouse_x - canvas_x
+        mouse_y = mouse_y - canvas_y
+
+        minX = position[0]
+        maxX = position[2]
+
+        minY = position[1]
+        maxY = position[3]
+
+        if (minX <= mouse_x <= maxX) | (minY <= mouse_y <= maxY):
+            if debugging == True: print("Inside X")
+            self.changeTextBackground_enterCallback = self.Root.after(2000, self.changeBackground_check )
+            pass
+        else:
+            if debugging == True: print("Outside X")
+            self.changeOutline_leave()
+
 
 
 
@@ -425,6 +524,8 @@ class MouseoverHighlight:
 
 if __name__ == "__main__":
 
+    debugging = False
+
     if debugging == True: print("Library File Test")
 
     Root = Tk()
@@ -436,16 +537,16 @@ if __name__ == "__main__":
     canvasText1 = canvas.create_text(10, 10, text = "Colour Change Highlight", anchor = NW)
     canvasText1_highlight = MouseoverHighlight(canvasText1, Root, canvas, highlightOption = 0x01)
 
-    #canvasText2 = canvas.create_text(10, 50, text = "Box Outline Highlight", anchor = NW)
-    #canvasText2_highlight = MouseoverHighlight(canvasText2, Root, canvas, highlightOption = 0x02)
+    canvasText2 = canvas.create_text(10, 50, text = "Box Outline Highlight", anchor = NW)
+    canvasText2_highlight = MouseoverHighlight(canvasText2, Root, canvas, highlightOption = 0x02)
 
-    #canvasText3 = canvas.create_text(10, 100, text = "Background Highlgiht", anchor = NW)
-    #canvasText3_highlight = MouseoverHighlight(canvasText3, Root, canvas, highlightOption = 0x04)
+    canvasText3 = canvas.create_text(10, 100, text = "Background Highlgiht", anchor = NW)
+    canvasText3_highlight = MouseoverHighlight(canvasText3, Root, canvas, highlightOption = 0x04)
 
-    #canvasText4 = canvas.create_text(10, 160, text = "Background Highlight", anchor = NW)
-    #canvasText4_highlight = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 1)
-    #canvasText4_highlight2 = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 2)
-    #canvasText4_highlight3 = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 4)
+    canvasText4 = canvas.create_text(10, 160, text = "Background Highlight", anchor = NW)
+    canvasText4_highlight = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 1)
+    canvasText4_highlight2 = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 2)
+    canvasText4_highlight3 = MouseoverHighlight(canvasText4, Root, canvas, highlightOption = 4)
 
     Root.mainloop()
 
