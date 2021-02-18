@@ -278,6 +278,7 @@ class MouseoverHighlight:
 
         self.Canvas.tag_bind(self.Widget, '<Enter>', self.changeTextColour_enter, add = '+')
         self.Canvas.tag_bind(self.Widget, '<Leave>', self.changeTextColour_leave, add = '+')
+        self.Root.bind('<Motion>', self.changeTextColour_check, add = '+')
 
         if debugging == True: print("Change Colour Highlight Initialization Complete")
 
@@ -297,6 +298,41 @@ class MouseoverHighlight:
         if debugging == True: print("Text back to normal")
 
         self.Canvas.itemconfig(self.Widget, fill = self.defaultTextColour)
+
+
+
+    def changeTextColour_check(self, event = None):
+
+        mouse_X = event.x
+        mouse_Y = event.y
+        widget_position = self.Canvas.bbox(self.Widget)
+        minX = widget_position[0]
+        maxX = widget_position[2]
+        minY = widget_position[1]
+        maxY = widget_position[3]
+
+        if debugging == True: print(mouse_X, mouse_Y)
+        if debugging == True: print(widget_position)
+
+
+        if minX <= mouse_X <= maxX:                                            # Mouse Cursor outside of Range?
+            if debugging == True: print("Inside")
+            pass
+        else:
+            self.changeTextColour_leave()
+
+
+        if minY <= mouse_Y <= maxY:
+            if debugging == True: print("Inside")
+            pass
+        else:
+            self.changeTextColour_leave()
+
+
+
+
+
+
 ##############################################################################
     def changeTextOutline(self):
         ''' Entering the Text Widget Region causes a box to outline the text '''
@@ -304,6 +340,7 @@ class MouseoverHighlight:
         if debugging == True: print("Outline Box Initialized")
         self.Canvas.tag_bind(self.Widget, '<Enter>', self.changeOutline_enter, add = '+')
         self.Canvas.tag_bind(self.Widget, '<Leave>', self.changeOutline_leave, add = '+')
+        self.Root.bind('<Motion>', self.changeOutline_check, add = '+')
         self.countEnter = 0
 
         if debugging == True: print("Outline Box Highlight Initialized")
@@ -323,8 +360,42 @@ class MouseoverHighlight:
         ''' Leaving the Text Widget Region Eliminates the Outline Box '''
         if debugging == True: print("Deleting Outline Box")
         self.Canvas.itemconfig(self.Widget, fill = "black")
-        self.Canvas.delete(self.highlightBox)
-        self.Canvas.update()
+        if "highlightBox" in self.__dict__.keys():
+            self.Canvas.delete(self.highlightBox)
+            self.Canvas.update()
+
+
+
+
+    def changeOutline_check(self, event = None):
+
+        mouse_X = event.x
+        mouse_Y = event.y
+        widget_position = self.Canvas.bbox(self.Widget)
+        minX = widget_position[0]
+        maxX = widget_position[2]
+        minY = widget_position[1]
+        maxY = widget_position[3]
+
+        if debugging == True: print(mouse_X, mouse_Y)
+        if debugging == True: print(widget_position)
+
+
+        if minX <= mouse_X <= maxX:                                            # Mouse Cursor outside of Range?
+            if debugging == True: print("Inside")
+            pass
+        else:
+            self.changeOutline_leave()
+
+
+        if minY <= mouse_Y <= maxY:
+            if debugging == True: print("Inside")
+            pass
+        else:
+            self.changeOutline_leave()
+
+
+
 
 ##############################################################################
     def changeTextBackground(self):
@@ -335,6 +406,7 @@ class MouseoverHighlight:
         self.coordinates = self.Canvas.bbox(self.Widget)
         self.Canvas.tag_bind(self.Widget, '<Enter>', self.changeBackground_enter, add = '+')
         self.Canvas.tag_bind(self.Widget, '<Leave>', self.changeBackground_leave, add = '+')
+        self.Root.bind('<Motion>', self.changeBackground_check, add = '+')
 
 
     def changeBackground_enter(self, event = None):
@@ -351,8 +423,38 @@ class MouseoverHighlight:
     def changeBackground_leave(self, event = None):
         ''' Leaving the Text Widget Region Returns the background colour
         to its normal default state '''
-        self.Canvas.delete(self.background)
-        self.Canvas.update()
+        if "background" in self.__dict__.keys():
+
+            self.Canvas.delete(self.background)
+            self.Canvas.update()
+
+
+    def changeBackground_check(self, event = None):
+
+        mouse_X = event.x
+        mouse_Y = event.y
+        widget_position = self.Canvas.bbox(self.Widget)
+        minX = widget_position[0]
+        maxX = widget_position[2]
+        minY = widget_position[1]
+        maxY = widget_position[3]
+
+        if debugging == True: print(mouse_X, mouse_Y)
+        if debugging == True: print(widget_position)
+
+
+        if minX <= mouse_X <= maxX:                                            # Mouse Cursor outside of Range?
+            if debugging == True: print("Inside")
+            pass
+        else:
+            self.changeBackground_leave()
+
+
+        if minY <= mouse_Y <= maxY:
+            if debugging == True: print("Inside")
+            pass
+        else:
+            self.changeBackground_leave()
 
 
 
