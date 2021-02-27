@@ -21,11 +21,22 @@ from tkinter import *
 ###     Author:  Chad Unterschultz
 ###
 ###     V 1.0.0    Feb 13, 2021
+###     V 1.0.1    Feb 22, 2021        Under some circumstances, the Canvas won't detect that the
+###                                    cursor has left the region of the widget. This is a particular
+###                                    problem with a popup menu. As a result, the widget remains
+###                                    highlighted even if the cursor has left. A simple fix is to
+###                                    schedule regular checks. If the cursor is outside of the region
+###                                    of the widget, the check catches it and the highlighting is cancelled
+###                                    (a leave operation is preformed). Also, sometimes the cancellation is
+###                                    scheduled but the highlighting has already been deleted or undone. To
+###                                    fix this case, the cancellation operation does a check beforehand.
+###                                    Otherwise an Error would occur.
+
 
 
 
 debugging = False
-VERSION     = (1,0,0)
+VERSION     = (1,0,1)
 VERSION_s   = "%s.%s.%s" %VERSION
 
 
@@ -168,6 +179,8 @@ class MouseoverHighlight:
                           backgroundColour )
         self.highlight()
 
+        self.check_time = 500
+
 
         pass
 
@@ -299,7 +312,7 @@ class MouseoverHighlight:
 
 
         if self.countEnter == 1:
-            self.enter_callback = self.Root.after(2000, self.changeTextColour_check)
+            self.enter_callback = self.Root.after(self.check_time, self.changeTextColour_check)
             if debugging == True: print("Callback Created")
 
     def changeTextColour_leave(self, event = None):
@@ -328,30 +341,27 @@ class MouseoverHighlight:
         mouse_y = self.Canvas.winfo_pointery()
         if debugging == True: print("Canvas Position: ", canvas_x, canvas_y)
         if debugging == True: print(" Mouse Position: ", mouse_x, mouse_y)
-        position = self.Canvas.bbox(self.Widget)
+        position = self.Canvas.bbox(self.Widget)                               # Returns None if widget not found
 
-        mouse_x = mouse_x - canvas_x
-        mouse_y = mouse_y - canvas_y
+        if position != None:
 
-        minX = position[0]
-        maxX = position[2]
+            mouse_x = mouse_x - canvas_x
+            mouse_y = mouse_y - canvas_y
+            minX = position[0]
+            maxX = position[2]
+            minY = position[1]
+            maxY = position[3]
 
-        minY = position[1]
-        maxY = position[3]
+            if debugging == True: print("# of Callbacks Entered: ", self.track)
 
-        if debugging == True: print("# of Callbacks Entered: ", self.track)
-
-        if (minX <= mouse_x <= maxX) & (minY <= mouse_y <= maxY) :
-            if debugging == True: print("Inside")
-            self.enter_callback = self.Root.after(2000, self.changeTextColour_check )
-            if debugging == True: print("Callback Created")
-            pass
-        else:
-            if debugging == True: print("Outside")
-            self.changeTextColour_leave()
-
-
-
+            if (minX <= mouse_x <= maxX) & (minY <= mouse_y <= maxY) :
+                if debugging == True: print("Inside")
+                self.enter_callback = self.Root.after(self.check_time, self.changeTextColour_check )
+                if debugging == True: print("Callback Created")
+                pass
+            else:
+                if debugging == True: print("Outside")
+                self.changeTextColour_leave()
 
 
 
@@ -382,10 +392,10 @@ class MouseoverHighlight:
 
         if self.changeTextOutline_countEnter <= 3:
             self.changeTextOutline_countEnter += 1
-        if debugging == True: print("Enter count: ", self.changeTextOutline_countEnter)
+        #if debugging == True: print("Enter count: ", self.changeTextOutline_countEnter)
 
         if self.changeTextOutline_countEnter == 1:
-            self.changeTextOutline_enterCallback = self.Root.after(2000, self.changeOutline_check)
+            self.changeTextOutline_enterCallback = self.Root.after(self.check_time, self.changeOutline_check)
             pass
 
 
@@ -423,10 +433,10 @@ class MouseoverHighlight:
         minY = position[1]
         maxY = position[3]
 
-        if (minX <= mouse_x <= maxX) | (minY <= mouse_y <= maxY):
+        if (minX <= mouse_x <= maxX) & (minY <= mouse_y <= maxY):
             if debugging == True: print("Inside X")
             if self.changeTextOutline_enterCallback == None:
-                self.changeTextOutline_enterCallback = self.Root.after(2000, self.changeOutline_check )
+                self.changeTextOutline_enterCallback = self.Root.after(self.check_time, self.changeOutline_check )
                 if debugging == True: print("Here 1")
             pass
         else:
@@ -465,7 +475,7 @@ class MouseoverHighlight:
             self.changeTextBackground_countEnter += 1
 
         if self.changeTextBackground_countEnter == 1:
-            self.changeTextBackground_enterCallback = self.Root.after(2000, self.changeBackground_check)
+            self.changeTextBackground_enterCallback = self.Root.after(self.check_time, self.changeBackground_check)
 
     def changeBackground_leave(self, event = None):
         ''' Leaving the Text Widget Region Returns the background colour
@@ -482,6 +492,7 @@ class MouseoverHighlight:
 
 
     def changeBackground_check(self):
+
         canvas_x = self.Canvas.winfo_rootx()
         canvas_y = self.Canvas.winfo_rooty()
 
@@ -500,9 +511,9 @@ class MouseoverHighlight:
         minY = position[1]
         maxY = position[3]
 
-        if (minX <= mouse_x <= maxX) | (minY <= mouse_y <= maxY):
+        if (minX <= mouse_x <= maxX) & (minY <= mouse_y <= maxY):
             if debugging == True: print("Inside X")
-            self.changeTextBackground_enterCallback = self.Root.after(2000, self.changeBackground_check )
+            self.changeTextBackground_enterCallback = self.Root.after(self.check_time, self.changeBackground_check )
             pass
         else:
             if debugging == True: print("Outside X")
@@ -524,7 +535,7 @@ class MouseoverHighlight:
 
 if __name__ == "__main__":
 
-    debugging = False
+    debugging = True
 
     if debugging == True: print("Library File Test")
 
